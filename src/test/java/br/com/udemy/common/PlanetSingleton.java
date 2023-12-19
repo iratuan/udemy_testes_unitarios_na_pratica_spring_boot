@@ -10,4 +10,11 @@ public class PlanetSingleton {
         }
         return instance;
     }
+
+    public static Planet getInvalidInstance(){
+        if (instance == null){
+            instance =  new Planet("","","");
+        }
+        return instance;
+    }
 }

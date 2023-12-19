@@ -215,3 +215,5 @@ public class PlanetSingleton {
 }
 
 ````
+
+### Implementando o cenário de erro

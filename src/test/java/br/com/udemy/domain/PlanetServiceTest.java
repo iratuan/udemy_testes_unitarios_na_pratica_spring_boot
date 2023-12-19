@@ -8,6 +8,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import static org.mockito.Mockito.when;
 
@@ -41,6 +42,13 @@ class PlanetServiceTest {
 
         // Assert -> Terceiro A de AAA
         assertThat(sut).isEqualTo(planet);
+    }
+
+    @Test
+    public void createPlanet_WithInvalideData_ThrowsException(){
+        Planet invalidPlanet = PlanetSingleton.getInvalidInstance();
+        when(planetRepository.save(invalidPlanet)).thenThrow(RuntimeException.class);
+        assertThatThrownBy(() -> planetService.create(invalidPlanet)).isInstanceOf(RuntimeException.class);
     }
 
 }
