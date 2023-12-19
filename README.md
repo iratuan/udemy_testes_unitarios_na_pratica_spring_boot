@@ -377,3 +377,11 @@ Para persistir uma entidade através da api, devemos invocar o método POST da n
 
 Agora, podemos chamar também o método listar todos, que é uma chamada através do método GET da nossa api.
 ![Método list all](./imgs/postman_list_all_planets.png)
+
+Note que, não precisamos criar uma tabela. O hibernate se encarregou disso pra gente.
+![Postgres](./imgs/postgres_table_planet.png)
+Através dessa configuração aqui, no arquivo application.properties
+````
+spring.jpa.hibernate.ddl-auto=update
+````
+Legal, não é?!
