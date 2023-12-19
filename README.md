@@ -138,6 +138,7 @@ Contexto de testes.
 ````
 package br.com.udemy.domain;
 
+import br.com.udemy.common.PlanetSingleton;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -146,7 +147,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import static br.com.udemy.common.PlanetConstants.PLANET;
 import static org.mockito.Mockito.when;
 
 /*
@@ -167,22 +167,24 @@ class PlanetServiceTest {
     * */
     @Test
     public void createPlanet_WithValidData_ReturnsPlanet() {
+        Planet planet = PlanetSingleton.getInstance();
+
         // Mockando o comportamento
         // Arrange -> Primeiro A de AAA
-        when(planetRepository.save(PLANET)).thenReturn(PLANET);
+        when(planetRepository.save(planet)).thenReturn(planet);
 
         // Act -> Segundo A de AAA
         // system under test (geralmente, o retorno esperado)
-        Planet sut = planetService.create(PLANET);
+        Planet sut = planetService.create(planet);
 
         // Assert -> Terceiro A de AAA
-        assertThat(sut).isEqualTo(PLANET);
+        assertThat(sut).isEqualTo(planet);
     }
 
 }
 ````
 
-*PlanetConstants.java*
+*PlanetConstants.java *
 ````
 package br.com.udemy.common;
 
@@ -190,6 +192,26 @@ import br.com.udemy.domain.Planet;
 
 public class PlanetConstants {
     public static  final Planet PLANET = new Planet("name","climate","terrain");
+}
+
+````
+
+*Refactory para PlanetSingleton.java*
+Fizemos essa alteração para introduzir boas práticas e padrões de projetos. Sinta-se livre para escolher a melhor abordagem.
+_O Singleton é um padrão de projeto criacional, que garante que apenas um objeto desse tipo exista e forneça um único ponto de acesso a ele para qualquer outro código._
+````
+package br.com.udemy.common;
+
+import br.com.udemy.domain.Planet;
+
+public class PlanetSingleton {
+    private static Planet instance;
+    public static Planet getInstance(){
+        if (instance == null){
+            instance =  new Planet("name","climate","terrain");
+        }
+        return instance;
+    }
 }
 
 ````
