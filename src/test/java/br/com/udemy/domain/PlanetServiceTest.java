@@ -3,6 +3,7 @@ package br.com.udemy.domain;
 import br.com.udemy.common.PlanetSingleton;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.shadow.com.univocity.parsers.common.DataValidationException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -47,8 +48,8 @@ class PlanetServiceTest {
     @Test
     public void createPlanet_WithInvalideData_ThrowsException(){
         Planet invalidPlanet = PlanetSingleton.getInvalidInstance();
-        when(planetRepository.save(invalidPlanet)).thenThrow(RuntimeException.class);
-        assertThatThrownBy(() -> planetService.create(invalidPlanet)).isInstanceOf(RuntimeException.class);
+        when(planetRepository.save(invalidPlanet)).thenThrow(DataValidationException.class);
+        assertThatThrownBy(() -> planetService.create(invalidPlanet)).isInstanceOf(DataValidationException.class);
     }
 
 }

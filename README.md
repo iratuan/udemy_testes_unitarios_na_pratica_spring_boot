@@ -217,3 +217,26 @@ public class PlanetSingleton {
 ````
 
 ### Implementando o cenário de erro
+Adicione na classe PlanetSingleton.java o seguinte método, que retornará uma instância inválida de planeta.
+````
+  public static Planet getInvalidInstance(){
+        if (instance == null){
+            instance =  new Planet("","","");
+        }
+        return instance;
+    }
+````
+
+Na classe PlanetServiceTest.java, acrescente  o método responsável por testar o comportamento de exception.
+````
+  @Test
+    public void createPlanet_WithInvalideData_ThrowsException(){
+        Planet invalidPlanet = PlanetSingleton.getInvalidInstance();
+        when(planetRepository.save(invalidPlanet)).thenThrow(RuntimeException.class);
+        assertThatThrownBy(() -> planetService.create(invalidPlanet)).isInstanceOf(RuntimeException.class);
+    }
+   
+````
+
+Note que instanciamos um planeta que seria inválido para persistência e simulamos o comportamento no caso da tentativa de persistência do objeto.
+Em seguinda, averiguamos se, de fato, uma exception do tipo DataValidationException, ja que o tipo de dado informado não é válido, é lançada.
