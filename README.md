@@ -29,3 +29,167 @@ spring.jpa.properties.hibernate.format_sql=true
  *não esqueça de configurar corretamente o nome da base, usuário e senha de acesso ao banco de dados*
  
 __________
+## Criando as classes iniciais
+Os pacotes são indicados na primeira linha de código de cada classe.
+Atente que, criamos uma classe auxiliar para efetuar os testes, chamada 'PlanetConstants';
+A razão da sua existência é unicamente auxiliar os testes, instanciando um objeto com os dados controlados.
+
+*Planet.java*
+
+```
+package br.com.udemy.domain;
+
+import jakarta.persistence.*;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+
+@Entity
+@Table(name = "planets")
+public class Planet {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String name;
+    private String climate;
+    private String terrain;
+
+    public Planet() {
+
+    }
+
+    public Planet(String name, String climate, String terrain) {
+        this.name = name;
+        this.climate = climate;
+        this.terrain = terrain;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getClimate() {
+        return climate;
+    }
+
+    public void setClimate(String climate) {
+        this.climate = climate;
+    }
+
+    public String getTerrain() {
+        return terrain;
+    }
+
+    public void setTerrain(String terrain) {
+        this.terrain = terrain;
+    }
+
+    @Override
+    public boolean equals(Object obj){
+        return EqualsBuilder.reflectionEquals(obj, this);
+    }
+}
+```
+*PlanetRepository.java*
+````
+package br.com.udemy.domain;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface PlanetRepository extends JpaRepository<Planet, Long> {
+}
+
+````
+
+*PlanetService.java*
+````
+package br.com.udemy.domain;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+@Service
+public class PlanetService {
+
+    @Autowired
+    private PlanetRepository repository;
+    public Planet create(Planet planet) {
+        return  repository.save(planet);
+    }
+}
+
+````
+
+Contexto de testes.
+
+*PlanetServiceTest.java*
+````
+package br.com.udemy.domain;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import static br.com.udemy.common.PlanetConstants.PLANET;
+import static org.mockito.Mockito.when;
+
+/*
+ * Regra para nomeação dos métodos
+ * operacao_estado_retorno
+ */
+@ExtendWith(MockitoExtension.class)
+class PlanetServiceTest {
+
+    @InjectMocks
+    private PlanetService planetService;
+
+    @Mock
+    private PlanetRepository planetRepository;
+
+    /*
+    * Exemplo de teste do tipo AAA onde
+    * */
+    @Test
+    public void createPlanet_WithValidData_ReturnsPlanet() {
+        // Mockando o comportamento
+        // Arrange -> Primeiro A de AAA
+        when(planetRepository.save(PLANET)).thenReturn(PLANET);
+
+        // Act -> Segundo A de AAA
+        // system under test (geralmente, o retorno esperado)
+        Planet sut = planetService.create(PLANET);
+
+        // Assert -> Terceiro A de AAA
+        assertThat(sut).isEqualTo(PLANET);
+    }
+
+}
+````
+
+*PlanetConstants.java*
+````
+package br.com.udemy.common;
+
+import br.com.udemy.domain.Planet;
+
+public class PlanetConstants {
+    public static  final Planet PLANET = new Planet("name","climate","terrain");
+}
+
+````
