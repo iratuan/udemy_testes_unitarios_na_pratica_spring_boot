@@ -216,6 +216,7 @@ public class PlanetSingleton {
 
 ````
 
+
 ### Implementando o cenário de erro
 Adicione na classe PlanetSingleton.java o seguinte método, que retornará uma instância inválida de planeta.
 ````
@@ -240,3 +241,139 @@ Na classe PlanetServiceTest.java, acrescente  o método responsável por testar 
 
 Note que instanciamos um planeta que seria inválido para persistência e simulamos o comportamento no caso da tentativa de persistência do objeto.
 Em seguinda, averiguamos se, de fato, uma exception do tipo DataValidationException, ja que o tipo de dado informado não é válido, é lançada.
+
+_______
+
+## Desenhando a API 
+Nesse ponto, iremos desenvolver uma API do tipo REST que nos sirva o recurso PLANET.
+![Design da API](./imgs/design_api.png)
+Iremos utilizar o [Postman](https://www.postman.com/downloads/) para fazer as requisições, mas você pode utilizar o [Isomnia](https://insomnia.rest/download) caso queira.
+Iremos utilizar algumas boas práticas
+
+
+#### Atualizando a classe PlanetService.java
+Iremos adicionar funcionalidades à nossa camada de serviço, portanto, atualize o código da classe conforme o exemplo abaixo.
+
+````
+package br.com.udemy.domain;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class PlanetService {
+
+    @Autowired
+    private PlanetRepository repository;
+
+    public List<Planet> listAll(){
+        return repository.findAll();
+    }
+    public Planet create(Planet planet) {
+        return  repository.save(planet);
+    }
+
+    public Optional<Planet> get(Long id) {
+        return repository.findById(id);
+    }
+}
+
+````
+Essa atualização vai prover novos comportamentos para nossa camada de serviço.
+
+#### Implementando métodos na camada de controle.
+
+Esse código faz com que a classe PlanetController.java possua um comportamento específico, um estereótipo, do tipo RESTCONTROLLER, que o spring já entrega para você.
+
+````
+package br.com.udemy.web;
+
+import br.com.udemy.domain.Planet;
+import br.com.udemy.domain.PlanetService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/planets")
+public class PlanetController {
+
+    @Autowired
+    private PlanetService service;
+
+    @GetMapping
+    public ResponseEntity<List<Planet>> listAllPlanets() {
+        var planets = service.listAll();
+        if (planets.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(planets);
+    }
+
+    @PostMapping
+    public ResponseEntity<Planet> createPlannet(@RequestBody Planet planet) {
+        var planetCreated = service.create(planet);
+        return ResponseEntity.status(HttpStatus.CREATED).body(planetCreated);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Planet> getPlanetById(@PathVariable("id") Long id) {
+        return service.get(id).map(planet -> ResponseEntity.ok(planet))
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+}
+
+````
+Note a forma como os métodos foram escritos, bem como suas anotações que define a forma como os dados irão trafegar através da api.
+
+````
+ @GetMapping
+ public ResponseEntity<List<Planet>> listAllPlanets() {
+        var planets = service.listAll();
+        if (planets.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(planets);
+    }
+````
+Esse método é invocado através do método GET e retorna a lista de planetas cadastrados em nossa base de dados.
+Caso não existam planetas cadastrados, a API vai retornar o status 204, que é o status code indicado para esse cenário.
+
+
+```` 
+   @PostMapping
+    public ResponseEntity<Planet> createPlannet(@RequestBody Planet planet) {
+        var planetCreated = service.create(planet);
+        return ResponseEntity.status(HttpStatus.CREATED).body(planetCreated);
+    }
+````
+Esse método cria um recurso. Note que um objeto é esperado quando você invoca o método, ou seja, você vai passar a configuração do planeta que será criado.
+Ao fim do processo, o método retorna o status 201, informando que o recurso foi criado com sucesso.
+
+
+```
+@GetMapping("/{id}")
+    public ResponseEntity<Planet> getPlanetById(@PathVariable("id") Long id) {
+        return service.get(id).map(planet -> ResponseEntity.ok(planet))
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+```
+
+Esse método é o responsável por buscar um registro específico na base de dados.
+Note que ele é invocado através do método GET, porém, passamos um ID, que é a chave de identificação do registro na base de dados.
+Esse método tem um comportamento particularmente interessante, que é o cenário em que o ID informado não retorne um registro na base de dados.
+Nesse caso, enviamos um status 404, informando que aquele registro não foi encontrado, mantendo assim a fluência e clareza da api.
+
+#### Persistindo um planet via API
+Para persistir uma entidade através da api, devemos invocar o método POST da nossa api, enviando a configuração do recurso que será criado.
+![Método create](./imgs/postman_create_planet.png)
+
+Agora, podemos chamar também o método listar todos, que é uma chamada através do método GET da nossa api.
+![Método list all](./imgs/postman_list_all_planets.png)
