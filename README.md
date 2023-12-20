@@ -425,3 +425,40 @@ Adicione os dois métodos abaixo à classe PlanetServiceTest.java
 
 Deixei uns comentário para ajudar no entendimento do código, mas em resumo, ele faz exatamente o que os comentários indicam.
 Ele testa os dois cenários que precisamos testar, mantendo os testes fieis aos cenários em que serão utilizados.
+_____
+#### Filtrando os dados por atributos dos planetas
+Precisamos agora, permitir que nossa API seja capaz de filtrar o resultado de acordo com as características dos planetas.
+Para isso, precisamos alterar algumas coisas, como:
+
+O método listarAllPlanets na classe PlanetController.java
+````
+    @GetMapping
+    public ResponseEntity<List<Planet>> listAllPlanets(Planet planet) {
+        var matcher = ExampleMatcher
+                .matching()
+                .withIgnoreCase()
+                .withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING);
+        var example = Example.of(planet, matcher);
+        var planets = service.listAll(example);
+        if (planets.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(planets);
+    }
+````
+
+O método listAll na classe PlanetService.java
+````
+    public List<Planet> listAll(Example<Planet> example){
+        return repository.findAll(example);
+    }
+````
+
+E em seguida, em seguida, testaremos via postman o retorno da API quando informarmos alguma característica do planeta.
+Ao chamar a API enviando, por exemplo, o name=Saturn, obtemos um registro, como esperado.
+![Método list all](./imgs/postman_list_by_name_positive.png)
+
+Porém, ao informar um nome de um planeta que não esteja cadastrado, obtemos um status 204, no content, conforme o esperado.
+![Método list all](./imgs/postman_list_by_name_negative.png)
+
+Em seguida, iremos implementar os testes de unidade para esse cenário.

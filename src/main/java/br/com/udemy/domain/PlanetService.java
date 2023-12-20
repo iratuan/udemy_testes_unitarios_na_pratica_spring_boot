@@ -1,6 +1,7 @@
 package br.com.udemy.domain;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -12,8 +13,8 @@ public class PlanetService {
     @Autowired
     private PlanetRepository repository;
 
-    public List<Planet> listAll(){
-        return repository.findAll();
+    public List<Planet> listAll(Example<Planet> example){
+        return repository.findAll(example);
     }
     public Planet create(Planet planet) {
         return  repository.save(planet);

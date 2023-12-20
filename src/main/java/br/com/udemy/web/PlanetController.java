@@ -3,6 +3,8 @@ package br.com.udemy.web;
 import br.com.udemy.domain.Planet;
 import br.com.udemy.domain.PlanetService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
@@ -18,8 +20,13 @@ public class PlanetController {
     private PlanetService service;
 
     @GetMapping
-    public ResponseEntity<List<Planet>> listAllPlanets() {
-        var planets = service.listAll();
+    public ResponseEntity<List<Planet>> listAllPlanets(Planet planet) {
+        var matcher = ExampleMatcher
+                .matching()
+                .withIgnoreCase()
+                .withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING);
+        var example = Example.of(planet, matcher);
+        var planets = service.listAll(example);
         if (planets.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
