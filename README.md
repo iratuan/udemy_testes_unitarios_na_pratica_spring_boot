@@ -462,3 +462,57 @@ Porém, ao informar um nome de um planeta que não esteja cadastrado, obtemos um
 ![Método list all](./imgs/postman_list_by_name_negative.png)
 
 Em seguida, iremos implementar os testes de unidade para esse cenário.
+_______
+#### Testando o cenário de filtro por nome do planeta
+Para testar o cenário, iremos acrescentar mais dois testes à nossa classe PlanetServiceTest.java
+que são:
+Esse, que testa o cenário positivo
+````java
+ @Test
+    public void getPlanets_ByExistingName_ReturnsListOfPlanets(){
+
+        //Preparando o cenário
+        var planet = PlanetSingleton.getInstance();
+        planet.setName("Saturn");
+        var matcher = ExampleMatcher
+                .matching()
+                .withIgnoreCase()
+                .withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING);
+        var example = Example.of(planet, matcher);
+        var listOfPlanets = List.of(planet);
+        // Cenário que mocka o comportamento
+        when(planetRepository.findAll(example)).thenReturn(listOfPlanets);
+
+        //SUT
+        var sut = planetService.listAll(example);
+        // Verificações
+        assertThat(sut).isEqualTo(listOfPlanets);
+    }
+````
+E esse, para o cenário negativo.
+````java
+
+    @Test
+    public void getPlanets_ByUnexistingName_ReturnsEmptyList(){
+
+        //Preparando o cenário
+        var planet = PlanetSingleton.getInstance();
+        planet.setName("Unexisting Name");
+        var matcher = ExampleMatcher
+                .matching()
+                .withIgnoreCase()
+                .withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING);
+        var example = Example.of(planet, matcher);
+        List<Planet> emptyList = Collections.emptyList();
+        // Cenário que mocka o comportamento
+        when(planetRepository.findAll(example)).thenReturn(emptyList);
+
+        //SUT
+        var sut = planetService.listAll(example);
+        // Verificações
+        assertThat(sut).isEmpty();
+    }
+````
+
+Rode a suite de testes e verifique se todos os testes passaram com sucesso.
+![Testes](./imgs/testes_sucesso_01.png)

@@ -6,9 +6,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.shadow.com.univocity.parsers.common.DataValidationException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -77,6 +80,48 @@ class PlanetServiceTest {
         when(planetRepository.findById(any())).thenReturn(Optional.empty());
         // SUT
         Optional<Planet> sut = planetService.get(1L);
+        // Verificações
+        assertThat(sut).isEmpty();
+    }
+
+    @Test
+    public void getPlanets_ByExistingName_ReturnsListOfPlanets(){
+
+        //Preparando o cenário
+        var planet = PlanetSingleton.getInstance();
+        planet.setName("Saturn");
+        var matcher = ExampleMatcher
+                .matching()
+                .withIgnoreCase()
+                .withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING);
+        var example = Example.of(planet, matcher);
+        var listOfPlanets = List.of(planet);
+        // Cenário que mocka o comportamento
+        when(planetRepository.findAll(example)).thenReturn(listOfPlanets);
+
+        //SUT
+        var sut = planetService.listAll(example);
+        // Verificações
+        assertThat(sut).isEqualTo(listOfPlanets);
+    }
+
+    @Test
+    public void getPlanets_ByUnexistingName_ReturnsEmptyList(){
+
+        //Preparando o cenário
+        var planet = PlanetSingleton.getInstance();
+        planet.setName("Unexisting Name");
+        var matcher = ExampleMatcher
+                .matching()
+                .withIgnoreCase()
+                .withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING);
+        var example = Example.of(planet, matcher);
+        List<Planet> emptyList = Collections.emptyList();
+        // Cenário que mocka o comportamento
+        when(planetRepository.findAll(example)).thenReturn(emptyList);
+
+        //SUT
+        var sut = planetService.listAll(example);
         // Verificações
         assertThat(sut).isEmpty();
     }
