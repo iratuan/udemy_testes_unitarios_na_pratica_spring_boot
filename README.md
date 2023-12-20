@@ -385,3 +385,43 @@ Através dessa configuração aqui, no arquivo application.properties
 spring.jpa.hibernate.ddl-auto=update
 ````
 Legal, não é?!
+
+### Adicionando os testes para busca de determinado planet por ID
+Já implementamos na camada de serviço e controller nossa detalhamento do planeta, passando como parâmetro o ID do mesmo, que pode ser recuperado na listagem de planetas.
+Agora, iremos implementar os testes de unidade para os cenários 
+*Planeta corresponde ao ID informado
+*planeta não corresponde ao ID informado
+
+Adicione os dois métodos abaixo à classe PlanetServiceTest.java
+
+````
+    @Test
+    public void getPlanet_ByExistingId_ReturnsPlanet(){
+        // Recupera uma instância válida de planet
+        Planet planet = PlanetSingleton.getInstance();
+        // Cenário que mocka o comportamento
+        when(planetRepository.findById(any())).thenReturn(Optional.ofNullable(planet));
+        // SUT
+        Optional<Planet> sut = planetService.get(1L);
+        // Verificações
+        // Note que verificamos se o optional retorna uma instância
+        assertThat(sut).isNotEmpty();
+        // Verificamos se a instância retornada, de fato, coincide com o esperado.
+        assertThat(sut.get()).isEqualTo(planet);
+    }
+````
+
+````
+    @Test
+    public void getPlanet_ByUnexistingId_ReturnsEmpty(){
+        // Cenário que mocka o comportamento
+        when(planetRepository.findById(any())).thenReturn(Optional.ofNullable(null));
+        // SUT
+        Optional<Planet> sut = planetService.get(1L);
+        // Verificações
+        assertThat(sut).isEmpty();
+    }
+````
+
+Deixei uns comentário para ajudar no entendimento do código, mas em resumo, ele faz exatamente o que os comentários indicam.
+Ele testa os dois cenários que precisamos testar, mantendo os testes fieis aos cenários em que serão utilizados.
