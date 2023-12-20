@@ -415,7 +415,7 @@ Adicione os dois métodos abaixo à classe PlanetServiceTest.java
     @Test
     public void getPlanet_ByUnexistingId_ReturnsEmpty(){
         // Cenário que mocka o comportamento
-        when(planetRepository.findById(any())).thenReturn(Optional.ofNullable(null));
+        when(planetRepository.findById(any())).thenReturn(Optional.empty());
         // SUT
         Optional<Planet> sut = planetService.get(1L);
         // Verificações
