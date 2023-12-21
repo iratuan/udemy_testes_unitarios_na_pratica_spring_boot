@@ -516,3 +516,135 @@ E esse, para o cenário negativo.
 
 Rode a suite de testes e verifique se todos os testes passaram com sucesso.
 ![Testes](./imgs/testes_sucesso_01.png)
+
+#### Modificando o controller PlanetController.java e a classe de testes para encapsular o construtor de consulta dinâmica.
+Um ponto ainda não foi explicado sobre o funcionamento dos filtros. Para evitarmos de criar um método que se adeque a cada cenário,
+iremos utilizar o ExampleMatcher. Ele é um construtor dinâmico de consultas que verifica em que você passa um objeto que será seu exemplo. 
+Esse objeto terá as propriedades que deverão ser filtradas e será enviada para o repositório, e é aí que a mágia acontece: 
+O spring se encarregará de fazer as buscas atendendo ao cenário.
+
+Iremos construir um Builder que irá retornar esse construtor de consulta para nós.
+
+Crie a classe QueryBuilderPlanet.java com o seguinte código:
+````java
+package br.com.udemy.domain;
+
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
+
+public class QueryBuilderPlanet {
+    public static Example build(Planet planet){
+        var matcher = ExampleMatcher
+                .matching()
+                .withIgnoreCase()
+                .withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING);
+        var example = Example.of(planet, matcher);
+
+        return example;
+    }
+}
+````
+
+E altere as classes PlanetController.java no método listAllPlanets
+````java
+    @GetMapping
+    public ResponseEntity<List<Planet>> listAllPlanets(Planet planet) {
+        var example = QueryBuilderPlanet.build(planet);
+        var planets = service.listAll(example);
+        if (planets.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(planets);
+    }
+
+````
+E a classe de testes nos métodos que testam a listagem
+````java
+ @Test
+    public void getPlanets_ByExistingName_ReturnsListOfPlanets(){
+
+        //Preparando o cenário
+        var planet = PlanetSingleton.getInstance();
+        planet.setName("Saturn");
+        var example =  QueryBuilderPlanet.build(planet);
+        var listOfPlanets = List.of(planet);
+        // Cenário que mocka o comportamento
+        when(planetRepository.findAll(example)).thenReturn(listOfPlanets);
+
+        //SUT
+        var sut = planetService.listAll(example);
+        // Verificações
+        assertThat(sut).isEqualTo(listOfPlanets);
+    }
+
+    @Test
+    public void getPlanets_ByUnexistingName_ReturnsEmptyList(){
+
+        //Preparando o cenário
+        var planet = PlanetSingleton.getInstance();
+        planet.setName("Unexisting Name");
+        var example = QueryBuilderPlanet.build(planet);
+        List<Planet> emptyList = Collections.emptyList();
+        // Cenário que mocka o comportamento
+        when(planetRepository.findAll(example)).thenReturn(emptyList);
+
+        //SUT
+        var sut = planetService.listAll(example);
+        // Verificações
+        assertThat(sut).isEmpty();
+    }
+````
+Dessa forma, o projeto fica mais limpo, com menos repetição e mantem uma qualidade aceitável.
+
+______
+#### Criando a funcionalidade de excluir um planeta.
+Iremos agora criar mais uma funcionalidade da nossa API: a de excluir um registro.
+Para isso, iremos invocar o a api utilizando o método DELETE e passando o ID do registro que desejamos excluir.
+Para isso, iremos iniciar criando a rota no controller.
+A rota de remoção no controller é bem parecida com a rota de detalhamento.
+````java
+        @DeleteMapping("/{id}")
+        public ResponseEntity deletePlanetById(@PathVariable("id") Long id) {
+            try {
+                service.delete(id);
+                return ResponseEntity.noContent().build();
+            }catch (EntityNotFoundException e){
+                return  ResponseEntity.notFound().build();
+            }
+        }
+````
+
+Iremos adicionar também mais um método na classe PlanetService.java.
+````java
+     public void delete(Long id) {
+        var optPlanet = repository.findById(id);
+        if(optPlanet.isPresent()){
+            repository.deleteById(id);
+        }
+            throw new EntityNotFoundException("Nenhum registro encontrado com o ID informado");
+    }
+````
+
+E agora iremos implementar os testes dos dois cenários: 
+
+**cenário onde queremos deletar um registro existente:**
+Iremos adicionar o seguinte testes à nossa classe PlanetServiceTest.java.
+
+Testando o cenário de sucesso
+````java
+    @Test
+    public void removePlanet_WithExistingId_DoesNotThrowsException(){
+        var planet = PlanetSingleton.getInstance();
+        when(planetRepository.findById(1L)).thenReturn(Optional.ofNullable(planet));
+       assertThatCode(()-> planetService.delete(1L)).doesNotThrowAnyException();
+    }
+````
+
+Testando o cenário de falha
+````java
+    @Test
+    public void removePlanet_WithUnexistingId_DoesThrowsException(){
+        when(planetRepository.findById(99L)).thenReturn(Optional.empty());
+        assertThatThrownBy(()-> planetService.delete(99L)).isInstanceOf(EntityNotFoundException.class);
+    }
+````

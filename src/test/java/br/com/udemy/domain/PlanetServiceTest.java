@@ -1,6 +1,7 @@
 package br.com.udemy.domain;
 
 import br.com.udemy.common.PlanetSingleton;
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.shadow.com.univocity.parsers.common.DataValidationException;
@@ -14,9 +15,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.when;
 
@@ -90,11 +89,7 @@ class PlanetServiceTest {
         //Preparando o cenário
         var planet = PlanetSingleton.getInstance();
         planet.setName("Saturn");
-        var matcher = ExampleMatcher
-                .matching()
-                .withIgnoreCase()
-                .withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING);
-        var example = Example.of(planet, matcher);
+        var example =  QueryBuilderPlanet.build(planet);
         var listOfPlanets = List.of(planet);
         // Cenário que mocka o comportamento
         when(planetRepository.findAll(example)).thenReturn(listOfPlanets);
@@ -111,11 +106,7 @@ class PlanetServiceTest {
         //Preparando o cenário
         var planet = PlanetSingleton.getInstance();
         planet.setName("Unexisting Name");
-        var matcher = ExampleMatcher
-                .matching()
-                .withIgnoreCase()
-                .withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING);
-        var example = Example.of(planet, matcher);
+        var example = QueryBuilderPlanet.build(planet);
         List<Planet> emptyList = Collections.emptyList();
         // Cenário que mocka o comportamento
         when(planetRepository.findAll(example)).thenReturn(emptyList);
@@ -124,6 +115,19 @@ class PlanetServiceTest {
         var sut = planetService.listAll(example);
         // Verificações
         assertThat(sut).isEmpty();
+    }
+
+    @Test
+    public void removePlanet_WithExistingId_DoesNotThrowsException(){
+        var planet = PlanetSingleton.getInstance();
+        when(planetRepository.findById(1L)).thenReturn(Optional.ofNullable(planet));
+       assertThatCode(()-> planetService.delete(1L)).doesNotThrowAnyException();
+    }
+
+    @Test
+    public void removePlanet_WithUnexistingId_DoesThrowsException(){
+        when(planetRepository.findById(99L)).thenReturn(Optional.empty());
+        assertThatThrownBy(()-> planetService.delete(99L)).isInstanceOf(EntityNotFoundException.class);
     }
 
 }
