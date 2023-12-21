@@ -36,7 +36,7 @@ A razão da sua existência é unicamente auxiliar os testes, instanciando um ob
 
 *Planet.java*
 
-```
+```java
 package br.com.udemy.domain;
 
 import jakarta.persistence.*;
@@ -114,7 +114,7 @@ public interface PlanetRepository extends JpaRepository<Planet, Long> {
 ````
 
 *PlanetService.java*
-````
+````java
 package br.com.udemy.domain;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -135,7 +135,7 @@ public class PlanetService {
 Contexto de testes.
 
 *PlanetServiceTest.java*
-````
+````java
 package br.com.udemy.domain;
 
 import br.com.udemy.common.PlanetSingleton;
@@ -185,7 +185,7 @@ class PlanetServiceTest {
 ````
 
 *PlanetConstants.java *
-````
+````java
 package br.com.udemy.common;
 
 import br.com.udemy.domain.Planet;
@@ -199,7 +199,7 @@ public class PlanetConstants {
 *Refactory para PlanetSingleton.java*
 Fizemos essa alteração para introduzir boas práticas e padrões de projetos. Sinta-se livre para escolher a melhor abordagem.
 _O Singleton é um padrão de projeto criacional, que garante que apenas um objeto desse tipo exista e forneça um único ponto de acesso a ele para qualquer outro código._
-````
+````java
 package br.com.udemy.common;
 
 import br.com.udemy.domain.Planet;
@@ -219,7 +219,7 @@ public class PlanetSingleton {
 
 ### Implementando o cenário de erro
 Adicione na classe PlanetSingleton.java o seguinte método, que retornará uma instância inválida de planeta.
-````
+````java
   public static Planet getInvalidInstance(){
         if (instance == null){
             instance =  new Planet("","","");
@@ -229,7 +229,7 @@ Adicione na classe PlanetSingleton.java o seguinte método, que retornará uma i
 ````
 
 Na classe PlanetServiceTest.java, acrescente  o método responsável por testar o comportamento de exception.
-````
+````java
   @Test
     public void createPlanet_WithInvalideData_ThrowsException(){
         Planet invalidPlanet = PlanetSingleton.getInvalidInstance();
@@ -254,7 +254,7 @@ Iremos utilizar algumas boas práticas
 #### Atualizando a classe PlanetService.java
 Iremos adicionar funcionalidades à nossa camada de serviço, portanto, atualize o código da classe conforme o exemplo abaixo.
 
-````
+````java
 package br.com.udemy.domain;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -288,7 +288,7 @@ Essa atualização vai prover novos comportamentos para nossa camada de serviço
 
 Esse código faz com que a classe PlanetController.java possua um comportamento específico, um estereótipo, do tipo RESTCONTROLLER, que o spring já entrega para você.
 
-````
+````java
 package br.com.udemy.web;
 
 import br.com.udemy.domain.Planet;
@@ -333,7 +333,7 @@ public class PlanetController {
 ````
 Note a forma como os métodos foram escritos, bem como suas anotações que define a forma como os dados irão trafegar através da api.
 
-````
+````java
  @GetMapping
  public ResponseEntity<List<Planet>> listAllPlanets() {
         var planets = service.listAll();
@@ -347,7 +347,7 @@ Esse método é invocado através do método GET e retorna a lista de planetas c
 Caso não existam planetas cadastrados, a API vai retornar o status 204, que é o status code indicado para esse cenário.
 
 
-```` 
+```` java
    @PostMapping
     public ResponseEntity<Planet> createPlannet(@RequestBody Planet planet) {
         var planetCreated = service.create(planet);
@@ -358,7 +358,7 @@ Esse método cria um recurso. Note que um objeto é esperado quando você invoca
 Ao fim do processo, o método retorna o status 201, informando que o recurso foi criado com sucesso.
 
 
-```
+```java
 @GetMapping("/{id}")
     public ResponseEntity<Planet> getPlanetById(@PathVariable("id") Long id) {
         return service.get(id).map(planet -> ResponseEntity.ok(planet))
@@ -394,7 +394,7 @@ Agora, iremos implementar os testes de unidade para os cenários
 
 Adicione os dois métodos abaixo à classe PlanetServiceTest.java
 
-````
+````java
     @Test
     public void getPlanet_ByExistingId_ReturnsPlanet(){
         // Recupera uma instância válida de planet
@@ -411,7 +411,7 @@ Adicione os dois métodos abaixo à classe PlanetServiceTest.java
     }
 ````
 
-````
+````java
     @Test
     public void getPlanet_ByUnexistingId_ReturnsEmpty(){
         // Cenário que mocka o comportamento
@@ -431,7 +431,7 @@ Precisamos agora, permitir que nossa API seja capaz de filtrar o resultado de ac
 Para isso, precisamos alterar algumas coisas, como:
 
 O método listarAllPlanets na classe PlanetController.java
-````
+````java
     @GetMapping
     public ResponseEntity<List<Planet>> listAllPlanets(Planet planet) {
         var matcher = ExampleMatcher
@@ -448,7 +448,7 @@ O método listarAllPlanets na classe PlanetController.java
 ````
 
 O método listAll na classe PlanetService.java
-````
+````java
     public List<Planet> listAll(Example<Planet> example){
         return repository.findAll(example);
     }
@@ -468,7 +468,7 @@ Para testar o cenário, iremos acrescentar mais dois testes à nossa classe Plan
 que são:
 Esse, que testa o cenário positivo
 ````java
- @Test
+    @Test
     public void getPlanets_ByExistingName_ReturnsListOfPlanets(){
 
         //Preparando o cenário
@@ -560,7 +560,7 @@ E altere as classes PlanetController.java no método listAllPlanets
 ````
 E a classe de testes nos métodos que testam a listagem
 ````java
- @Test
+    @Test
     public void getPlanets_ByExistingName_ReturnsListOfPlanets(){
 
         //Preparando o cenário
@@ -602,7 +602,7 @@ Iremos agora criar mais uma funcionalidade da nossa API: a de excluir um registr
 Para isso, iremos invocar o a api utilizando o método DELETE e passando o ID do registro que desejamos excluir.
 Para isso, iremos iniciar criando a rota no controller.
 A rota de remoção no controller é bem parecida com a rota de detalhamento.
-````java
+```java
         @DeleteMapping("/{id}")
         public ResponseEntity deletePlanetById(@PathVariable("id") Long id) {
             try {
@@ -612,7 +612,7 @@ A rota de remoção no controller é bem parecida com a rota de detalhamento.
                 return  ResponseEntity.notFound().build();
             }
         }
-````
+```
 
 Iremos adicionar também mais um método na classe PlanetService.java.
 ````java
