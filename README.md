@@ -648,3 +648,7 @@ Testando o cenário de falha
         assertThatThrownBy(()-> planetService.delete(99L)).isInstanceOf(EntityNotFoundException.class);
     }
 ````
+
+________
+## Testes de integração
+Para saber um pouco mais sobre testes de integração, aconselho a leitura desse artigo [aqui](https://kenzie.com.br/blog/teste-de-integracao/), que explica de forma clara os conceitos principais.
